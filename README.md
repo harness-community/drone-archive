@@ -1,4 +1,4 @@
-# drone-archive
+# archive-plugin
 
 - [Synopsis](#Synopsis)
 - [Plugin Image](#Plugin-Image)
@@ -14,7 +14,7 @@ Currently, it supports zip/unzip functionalities.
 
 ## Plugin Image
 
-The plugin `harnesscommunitytest/drone-archive` is available for the following architectures:
+The plugin `harnesscommunitytest/archive-plugin` is available for the following architectures:
 
 | OS            | Tag             |
 |---------------|-----------------|
@@ -46,7 +46,7 @@ Build the plugin image:
 docker run --rm \
     -e PLUGIN_SOURCE="$SOURCE_PATH" \
     -e PLUGIN_TARGET="$TARGET_PATH" \
-    drone-archive:latest
+    archive-plugin:latest
 
 ```
 
@@ -58,7 +58,7 @@ docker run --rm \
     identifier: archive-plugin-arm64
     spec:
         connectorRef: harness-docker-connector
-        image: harnesscommunitytest/drone-archive:linux-arm64
+        image: harnesscommunitytest/archive-plugin:linux-arm64
         settings:
             source: path/to/source
             target: targetpath
@@ -70,7 +70,7 @@ docker run --rm \
     identifier: archive-plugin-amd64
     spec:
         connectorRef: harness-docker-connector
-        image: harnesscommunitytest/drone-archive:linux-amd64
+        image: harnesscommunitytest/archive-plugin:linux-amd64
         settings:
             source: path/to/source
             target: targetpath

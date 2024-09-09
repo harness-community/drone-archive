@@ -1,4 +1,4 @@
-FROM golang:1.17
+FROM alpine:3.19.4
 
 COPY release/linux/amd64/drone-archive /bin/
 

@@ -1,4 +1,4 @@
-FROM golang:1.17
+FROM plugins/base:windows-ltsc2022-amd64
 
 COPY release/windows/amd64/drone-archive.exe C:/drone-archive.exe
 

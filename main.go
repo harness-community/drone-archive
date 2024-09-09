@@ -6,7 +6,7 @@ package main
 
 import (
 	"context"
-	"example.com/m/v2/plugin"
+	"github.com/harness-community/drone-archive/plugin"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/sirupsen/logrus"
 )

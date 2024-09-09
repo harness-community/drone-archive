@@ -1,4 +1,4 @@
-module example.com/m/v2
+module github.com/harness-community/drone-archive
 
 go 1.22.3
 

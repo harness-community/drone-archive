@@ -1,0 +1,5 @@
+FROM golang:1.17
+
+COPY release/windows/amd64/drone-archive.exe C:/drone-archive.exe
+
+ENTRYPOINT ["C:\\drone-archive.exe"]

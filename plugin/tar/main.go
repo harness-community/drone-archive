@@ -7,56 +7,52 @@ package tar
 import (
 	"archive/tar"
 	"compress/gzip"
-	"github.com/bmatcuk/doublestar"
+	"github.com/bmatcuk/doublestar/v4"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 )
 
-func Tar(source, target, globPattern string, compress bool) error {
-	var fileWriter io.Writer
-	tarfile, err := os.Create(target)
+func Tar(source, target, excludePattern, globPattern string, compress bool) error {
+	var fileWriter io.WriteCloser
+	fileWriter, err := os.Create(target)
 	if err != nil {
 		return err
 	}
-	defer tarfile.Close()
+	defer fileWriter.Close()
 
+	var writer io.Writer = fileWriter
 	if compress {
-		gzipWriter := gzip.NewWriter(tarfile)
-		defer gzipWriter.Close()
-		fileWriter = gzipWriter
-	} else {
-		fileWriter = tarfile
+		writer = gzip.NewWriter(fileWriter)
+		defer writer.(*gzip.Writer).Close()
 	}
 
-	archive := tar.NewWriter(fileWriter)
-	defer archive.Close()
+	tarWriter := tar.NewWriter(writer)
+	defer tarWriter.Close()
 
 	return filepath.Walk(source, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 
-		if globPattern != "" {
-			match, err := doublestar.Match(globPattern, path)
-			if err != nil || !match {
-				return nil // Skip files not matching the glob pattern
-			}
+		// Apply glob and exclude patterns
+		matchesGlob, _ := doublestar.Match(globPattern, path)
+		matchesExclude, _ := doublestar.Match(excludePattern, path)
+
+		if (globPattern != "" && !matchesGlob) || (excludePattern != "" && matchesExclude) {
+			// Skip this file or directory
+			return nil
 		}
 
-		header, err := tar.FileInfoHeader(info, path)
+		header, err := tar.FileInfoHeader(info, "")
 		if err != nil {
 			return err
 		}
 
-		if info.IsDir() {
-			header.Name += "/"
-		} else {
-			header.Name = strings.TrimPrefix(path, filepath.Dir(source)+"/")
-		}
+		header.Name = strings.TrimPrefix(strings.Replace(path, source, "", -1), string(filepath.Separator))
 
-		if err := archive.WriteHeader(header); err != nil {
+		if err := tarWriter.WriteHeader(header); err != nil {
 			return err
 		}
 
@@ -69,7 +65,8 @@ func Tar(source, target, globPattern string, compress bool) error {
 			return err
 		}
 		defer file.Close()
-		_, err = io.Copy(archive, file)
+
+		_, err = io.Copy(tarWriter, file)
 		return err
 	})
 }
@@ -81,48 +78,49 @@ func Untar(source, target, globPattern string) error {
 	}
 	defer file.Close()
 
-	var fileReader io.Reader = file
+	var reader io.Reader = file
 	if strings.HasSuffix(source, ".gz") {
-		gzipReader, err := gzip.NewReader(file)
+		reader, err = gzip.NewReader(file)
 		if err != nil {
 			return err
 		}
-		defer gzipReader.Close()
-		fileReader = gzipReader
+		defer reader.(*gzip.Reader).Close()
 	}
 
-	tarReader := tar.NewReader(fileReader)
+	tarReader := tar.NewReader(reader)
 
 	for {
 		header, err := tarReader.Next()
 		if err == io.EOF {
-			break // End of archive
+			break
 		}
 		if err != nil {
 			return err
 		}
 
-		path := filepath.Join(target, header.Name)
+		matchesGlob, _ := doublestar.Match(globPattern, header.Name)
 
-		if globPattern != "" {
-			match, err := doublestar.Match(globPattern, path)
-			if err != nil || !match {
-				continue // Skip files not matching the glob pattern
-			}
+		if globPattern != "" && !matchesGlob {
+			// Skip this file
+			continue
 		}
 
-		switch header.Typeflag {
-		case tar.TypeDir:
-			if err := os.MkdirAll(path, 0755); err != nil {
-				return err
-			}
-		case tar.TypeReg:
-			outFile, err := os.Create(path)
+		targetPath := filepath.Join(target, header.Name)
+
+		if header.Typeflag == tar.TypeDir {
+			os.MkdirAll(targetPath, 0755)
+			continue
+		}
+
+		if header.Typeflag == tar.TypeReg {
+			outFile, err := os.Create(targetPath)
 			if err != nil {
 				return err
 			}
 			defer outFile.Close()
-			if _, err := io.Copy(outFile, tarReader); err != nil {
+
+			_, err = io.Copy(outFile, tarReader)
+			if err != nil {
 				return err
 			}
 		}

@@ -11,6 +11,7 @@ import (
 	"github.com/harness-community/drone-archive/plugin/tar"
 	"github.com/harness-community/drone-archive/plugin/zip"
 	"os"
+	"strings"
 )
 
 type Plugin struct {
@@ -20,42 +21,56 @@ type Plugin struct {
 	Action      string `envconfig:"PLUGIN_ACTION"` // "archive" or "extract"
 	Overwrite   bool   `envconfig:"PLUGIN_OVERWRITE"`
 	TarCompress bool   `envconfig:"PLUGIN_TARCOMPRESS"`
+	Exclude     string `envconfig:"PLUGIN_EXCLUDE"`
 	Glob        string `envconfig:"PLUGIN_GLOB"`
 	LogLevel    string `envconfig:"PLUGIN_LOG_LEVEL"`
 }
 
 func (p *Plugin) Exec(ctx context.Context) error {
-	if p.Overwrite {
+	if !p.Overwrite {
 		if _, err := os.Stat(p.Target); err == nil {
-			if err := os.RemoveAll(p.Target); err != nil {
-				return fmt.Errorf("failed to overwrite target: %w", err)
-			}
+			return fmt.Errorf("target file or directory already exists: %s", p.Target)
 		}
 	}
 
-	switch p.Format {
+	switch strings.ToLower(p.Format) {
 	case "zip":
-		if p.Action == "archive" {
-			return zip.Zip(p.Source, p.Target, p.Glob)
-		} else {
-			return zip.Unzip(p.Source, p.Target, p.Glob)
-		}
+		return p.handleZip()
 	case "tar":
-		return p.handleTarAction()
+		return p.handleTar()
 	case "gzip":
-		if p.Action == "archive" {
-			return gzip.GzipFile(p.Source, p.Target)
-		} else {
-			return gzip.GunzipFile(p.Source, p.Target)
-		}
+		return p.handleGzip()
 	default:
 		return fmt.Errorf("unsupported format: %s", p.Format)
 	}
 }
 
-func (p *Plugin) handleTarAction() error {
-	if p.Action == "archive" {
-		return tar.Tar(p.Source, p.Target, p.Glob, p.TarCompress)
+func (p *Plugin) handleZip() error {
+	if strings.ToLower(p.Action) == "archive" {
+		return zip.Zip(p.Source, p.Target, p.Exclude, p.Glob)
+	} else if strings.ToLower(p.Action) == "extract" {
+		return zip.Unzip(p.Source, p.Target, p.Glob)
+	} else {
+		return fmt.Errorf("unsupported action for zip: %s", p.Action)
 	}
-	return tar.Untar(p.Source, p.Target, p.Glob)
+}
+
+func (p *Plugin) handleTar() error {
+	if strings.ToLower(p.Action) == "archive" {
+		return tar.Tar(p.Source, p.Target, p.Exclude, p.Glob, p.TarCompress)
+	} else if strings.ToLower(p.Action) == "extract" {
+		return tar.Untar(p.Source, p.Target, p.Glob)
+	} else {
+		return fmt.Errorf("unsupported action for tar: %s", p.Action)
+	}
+}
+
+func (p *Plugin) handleGzip() error {
+	if strings.ToLower(p.Action) == "archive" {
+		return gzip.GzipFile(p.Source, p.Target)
+	} else if strings.ToLower(p.Action) == "extract" {
+		return gzip.GunzipFile(p.Source, p.Target)
+	} else {
+		return fmt.Errorf("unsupported action for gzip: %s", p.Action)
+	}
 }

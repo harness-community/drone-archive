@@ -53,7 +53,6 @@ func TestTarArchiveWithExclude(t *testing.T) {
 		t.Fatalf("expected no error, got %v", err)
 	}
 
-	// Add specific checks if needed to verify excluded files are not in the archive.
 }
 
 func TestUntarExtract(t *testing.T) {
@@ -130,9 +129,6 @@ func TestTarPatterns(t *testing.T) {
 			if err != nil {
 				t.Fatalf("expected no error, got %v", err)
 			}
-
-			// Add validation logic to check files inside the archive.
-			// This can be done by extracting and comparing file names.
 		})
 	}
 }

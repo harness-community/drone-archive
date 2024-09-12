@@ -39,7 +39,6 @@ func TestZipArchiveWithGlob(t *testing.T) {
 		t.Fatalf("expected no error, got %v", err)
 	}
 
-	// Add specific checks if needed to verify only txt files are archived.
 }
 
 func TestZipArchiveWithExclude(t *testing.T) {
@@ -54,7 +53,6 @@ func TestZipArchiveWithExclude(t *testing.T) {
 		t.Fatalf("expected no error, got %v", err)
 	}
 
-	// Add specific checks if needed to verify excluded files are not in the zip.
 }
 
 func TestUnzipExtract(t *testing.T) {
@@ -132,8 +130,6 @@ func TestZipPatterns(t *testing.T) {
 				t.Fatalf("expected no error, got %v", err)
 			}
 
-			// Add validation logic to check files inside the zip.
-			// This can be done by extracting and comparing file names.
 		})
 	}
 }

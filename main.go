@@ -14,7 +14,7 @@ import (
 func main() {
 	logrus.SetFormatter(new(formatter))
 
-	var args plugin.ZipPlugin
+	var args plugin.Plugin
 	if err := envconfig.Process("", &args); err != nil {
 		logrus.Fatalln(err)
 	}

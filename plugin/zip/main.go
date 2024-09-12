@@ -6,13 +6,14 @@ package zip
 
 import (
 	"archive/zip"
+	"github.com/bmatcuk/doublestar/v4"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 )
 
-func Zip(source, target string) error {
+func Zip(source, target, excludePattern, globPattern string) error {
 	zipfile, err := os.Create(target)
 	if err != nil {
 		return err
@@ -24,7 +25,7 @@ func Zip(source, target string) error {
 
 	info, err := os.Stat(source)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	var baseDir string
@@ -35,6 +36,15 @@ func Zip(source, target string) error {
 	return filepath.Walk(source, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
+		}
+
+		// Apply glob and exclude patterns
+		matchesGlob, _ := doublestar.Match(globPattern, path)
+		matchesExclude, _ := doublestar.Match(excludePattern, path)
+
+		if (globPattern != "" && !matchesGlob) || (excludePattern != "" && matchesExclude) {
+			// Skip this file or directory
+			return nil
 		}
 
 		header, err := zip.FileInfoHeader(info)
@@ -71,7 +81,7 @@ func Zip(source, target string) error {
 	})
 }
 
-func Unzip(source, target string) error {
+func Unzip(source, target, globPattern string) error {
 	reader, err := zip.OpenReader(source)
 	if err != nil {
 		return err
@@ -79,6 +89,13 @@ func Unzip(source, target string) error {
 	defer reader.Close()
 
 	for _, file := range reader.File {
+		matchesGlob, _ := doublestar.Match(globPattern, file.Name)
+
+		if globPattern != "" && !matchesGlob {
+			// Skip this file
+			continue
+		}
+
 		path := filepath.Join(target, file.Name)
 		if file.FileInfo().IsDir() {
 			os.MkdirAll(path, file.Mode())

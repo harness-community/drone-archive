@@ -3,6 +3,7 @@ module github.com/harness-community/drone-archive
 go 1.22.3
 
 require (
+	github.com/bmatcuk/doublestar/v4 v4.6.1
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/sirupsen/logrus v1.9.3
 )

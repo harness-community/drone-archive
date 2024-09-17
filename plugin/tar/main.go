@@ -7,7 +7,6 @@ package tar
 import (
 	"archive/tar"
 	"compress/gzip"
-	"fmt"
 	"github.com/bmatcuk/doublestar/v4"
 	"io"
 	"os"
@@ -90,11 +89,6 @@ func Untar(source, target, globPattern string) error {
 
 	tarReader := tar.NewReader(reader)
 
-	// Create the target directory if it doesn't exist
-	if err := os.MkdirAll(target, 0755); err != nil {
-		return err
-	}
-
 	for {
 		header, err := tarReader.Next()
 		if err == io.EOF {
@@ -113,33 +107,22 @@ func Untar(source, target, globPattern string) error {
 
 		targetPath := filepath.Join(target, header.Name)
 
-		// Check if the file path is within the target directory
-		if !strings.HasPrefix(targetPath, filepath.Clean(target)+string(os.PathSeparator)) {
-			return fmt.Errorf("invalid file path: %s", targetPath)
+		if header.Typeflag == tar.TypeDir {
+			os.MkdirAll(targetPath, 0755)
+			continue
 		}
 
-		switch header.Typeflag {
-		case tar.TypeDir:
-			if err := os.MkdirAll(targetPath, 0755); err != nil {
-				return err
-			}
-		case tar.TypeReg:
-			// Ensure the parent directory of the file exists
-			if err := os.MkdirAll(filepath.Dir(targetPath), 0755); err != nil {
-				return err
-			}
-
-			outFile, err := os.OpenFile(targetPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, os.FileMode(header.Mode))
+		if header.Typeflag == tar.TypeReg {
+			outFile, err := os.Create(targetPath)
 			if err != nil {
 				return err
 			}
 			defer outFile.Close()
 
-			if _, err := io.Copy(outFile, tarReader); err != nil {
+			_, err = io.Copy(outFile, tarReader)
+			if err != nil {
 				return err
 			}
-		default:
-			return fmt.Errorf("unknown type: %b in %s", header.Typeflag, header.Name)
 		}
 	}
 	return nil

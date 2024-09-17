@@ -6,6 +6,7 @@ package zip
 
 import (
 	"archive/zip"
+	"fmt"
 	"github.com/bmatcuk/doublestar/v4"
 	"io"
 	"os"
@@ -88,6 +89,11 @@ func Unzip(source, target, globPattern string) error {
 	}
 	defer reader.Close()
 
+	// Create the target directory if it doesn't exist
+	if err := os.MkdirAll(target, 0755); err != nil {
+		return err
+	}
+
 	for _, file := range reader.File {
 		matchesGlob, _ := doublestar.Match(globPattern, file.Name)
 
@@ -97,9 +103,20 @@ func Unzip(source, target, globPattern string) error {
 		}
 
 		path := filepath.Join(target, file.Name)
+
+		// Check if the file path is within the target directory
+		if !strings.HasPrefix(path, filepath.Clean(target)+string(os.PathSeparator)) {
+			return fmt.Errorf("invalid file path: %s", path)
+		}
+
 		if file.FileInfo().IsDir() {
 			os.MkdirAll(path, file.Mode())
 			continue
+		}
+
+		// Ensure the parent directory of the file exists
+		if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+			return err
 		}
 
 		fileReader, err := file.Open()

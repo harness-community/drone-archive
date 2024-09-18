@@ -14,7 +14,7 @@ This repository contains a plugin for running archive functionalities like zip/t
 
 ## Plugin Image
 
-The plugin `harnesscommunitytest/archive-plugin` is available for the following architectures:
+The plugin `plugins/archive` is available for the following architectures:
 
 | OS            | Tag             |
 |---------------|-----------------|
@@ -56,7 +56,7 @@ docker run \
   -e PLUGIN_OVERWRITE=true \
   -e PLUGIN_EXCLUDE="*.log" \
   -e PLUGIN_GLOB="**/*.txt" \
-  harnesscommunitytest/archive-plugin
+  plugins/archive
   
 docker run \
   -e PLUGIN_SOURCE=/data/backup/archive.zip \
@@ -65,7 +65,7 @@ docker run \
   -e PLUGIN_ACTION=extract \
   -e PLUGIN_OVERWRITE=true \
   -e PLUGIN_GLOB="**/*.txt" \
-  harnesscommunitytest/archive-plugin
+  plugins/archive
   
 docker run \
   -e PLUGIN_SOURCE=/data/source \
@@ -76,7 +76,7 @@ docker run \
   -e PLUGIN_EXCLUDE="*.log" \
   -e PLUGIN_GLOB="**/*.txt" \
   -e PLUGIN_TARCOMPRESS=false \
-  harnesscommunitytest/archive-plugin
+  plugins/archive
   
 docker run \
   -e PLUGIN_SOURCE=/data/backup/archive.tar \
@@ -85,7 +85,7 @@ docker run \
   -e PLUGIN_ACTION=extract \
   -e PLUGIN_OVERWRITE=true \
   -e PLUGIN_GLOB="**/*.txt" \
-  harnesscommunitytest/archive-plugin
+  plugins/archive
   
 docker run \
   -e PLUGIN_SOURCE=/data/source \
@@ -96,7 +96,7 @@ docker run \
   -e PLUGIN_TARCOMPRESS=true \
   -e PLUGIN_EXCLUDE="*.log" \
   -e PLUGIN_GLOB="**/*.txt" \
-  harnesscommunitytest/archive-plugin
+  plugins/archive
   
 ```
 
@@ -108,7 +108,7 @@ docker run \
     identifier: archive-plugin-arm64
     spec:
         connectorRef: harness-docker-connector
-        image: harnesscommunitytest/archive-plugin:linux-arm64
+        image: plugins/archive:linux-arm64
         settings:
             source: path/to/source
             target: targetpath

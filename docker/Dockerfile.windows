@@ -1,0 +1,5 @@
+FROM plugins/base:windows-ltsc2022-amd64
+
+COPY release/windows/amd64/drone-archive.exe C:/drone-archive.exe
+
+ENTRYPOINT ["C:\\drone-archive.exe"]

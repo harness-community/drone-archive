@@ -1,6 +1,6 @@
 module github.com/harness-community/drone-archive
 
-go 1.22.3
+go 1.22
 
 require (
 	github.com/bmatcuk/doublestar/v4 v4.6.1
